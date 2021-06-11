@@ -14,38 +14,101 @@ import open3d as o3d
 import random 
 import pickle as pkl
 from tqdm import tqdm
-from obj_loader import TriangleMesh
 
-
+tmp_file = 5520
+seq = 1
 # ***** 需要你补充的变量) ******
-manual_model_to_smpl = {}
-#(e.g.) manual_model_to_smpl = {0: 0, 1: 3, 2: 2, 3: 1, 4: 6, 5: 5, 6: 4, 7: 9, 8: 8, 9: 7, 10: 12, 11: 14, 12: 13, 21: 19, 22: 18, 23: 21, 24: 20, 16: 17, 17: 16}
+
+#{0:, 1:, 2:, 3:, 4:, 5:, 6:, 7:, 8:, 9:, 10:, 11:, 12:, 13:, 14:, 15:, 16:, 17:, 18:, 19:, 20:,}
+#(e.g.) 
+# manual_model_to_smpl = {0: 0, 1: 3, 2: 2, 3: 1, 4: 6, 5: 5, 6: 4, 7: 9, 8: 8, 9: 7, 10: 12, 11: 14, 12: 13, 21: 19, 22: 18, 23: 21, 24: 20, 16: 17, 17: 16}
+
+# 1441(finished,bad) manual_model_to_smpl = {0:0, 1:3, 2:1, 3:2,  4:6,5:4, 6:5, 8:7,  7:9,9:8, 10:12, 11:10, 12:11, 14:15,  13:13, 15:14, 16:16,17:17,18:18,19:19,20:20,21:21,22:22,24:23}
+# 163(F,G) manual_model_to_smpl = {0:0, 1:1, 2:3, 3:2, 4:4, 5:6, 6:5, 7:7, 8:9, 9:8,  11:14, 12:13, 13:15, 14:17, 15:16, 18:19, 21:18, 25:21, 26:20, 27:23, 30:22}
+# 18998(F,G) manual_model_to_smpl ={0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:17, 7:15, 8:16, 9:7, 10:8, 11:19, 12:18, 13:21, 14:20}
+# 15980(F,G) manual_model_to_smpl ={0:0, 1:3, 2:2, 3:1, 4:9, 5:5, 6:4, 7:14, 8:15, 9:13, 10:8, 11:7, 12:17,  16:16, 17:11, 18:10, 19:19, 20:18, 23:21, 24:20, 25:23, 26:22}
+# 15604(F,G) manual_model_to_smpl ={0:0, 1:1, 2:3, 3:2, 4:4, 5:6, 6:5, 7:7, 8:12, 9:13, 10:14, 11:8, 12:15, 13:16, 14:17, 18:18, 19:19, 20:20, 21:21}
+# 10563(F,G) manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:12, 8:13, 9:14, 10:7, 11:8, 12:15, 13:16, 14:17, 15:10, 16:11,  18:18, 19:19, 20:20,21:21,22:22,23:23}
+# 10559(F,G) manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:12, 8:13, 9:14, 10:7, 11:8, 12:15, 13:16, 14:17,  15:18, 16:19, 17:20, 18:21,19:22,20:23}
+# 10071(F,G) manual_model_to_smpl ={0:0, 1:1, 2:3, 3:2, 4:4, 5:9, 6:5, 7:7, 8:12, 9:13, 10:14, 11:8, 12:10, 13:15, 14:16, 15:17, 16:11, 19:18,20:19, 22:10, 23:21}
+# 10067(F,G?) 他妈的动力树是反的不转头 manual_model_to_smpl ={0:3, 1:6, 2:0, 3:9, 4:1, 5:2, 6:12, 7:13, 8:14, 9:4, 10:5, 11:15, 12:16, 13:17, 14:7, 15:8, 18:18, 19:19,20:10, 21:11, 23:20, 24:21}
+# 9468(F,B) manual_model_to_smpl ={0:3, 1:0, 2:9,   3:2, 4:1, 5:12,   6:13, 7:14, 8:5, 9:4, 10:16, 11:17, 12:8, 13:7, 14:18, 15:19, 16:20, 17:21}
+# 8336(F,G) manual_model_to_smpl ={0:0, 1:3, 2:2, 3:1, 4:16, 5:12, 6:17, 7:5, 8:4, 9:18, 10:19, 11:8, 12:7, 13:20, 14:21}
+# 8303(F,G) manual_model_to_smpl = {0:0, 1:3, 2:2, 3:1, 4:16, 5:12, 6:17, 7:5, 8:4, 9:16, 10:17, 11:8, 12:7, 13:20, 14:21} 
+# 7570 有衣服，挡住手了 manual_model_to_smpl ={0:0, 1:1, 2:3, 3:2, 4:4, 5:9,   6:5, 7:7, 8:12,  10:13, 11:14, 12:8, 13:10, 14:15,  16:16, 18:17, 19:11, 22:18, 23:19, 24:20, 25:21}
+# 7222 (F,G) manual_model_to_smpl ={0:0, 1:1, 2:3, 3:2, 4:4, 5:9,   6:5, 7:7, 8:12, 9:13, 10:14, 11:8, 12:10, 13:15, 14:16, 15:17, 16:11, 21:18, 22:19, 24:20, 25:21}
+# 5520 manual_model_to_smpl ={0:0, 1:1, 2:3, 3:2, 6:4, 7:9, 8:5, 9:7, 10:17, 11:12, 12:16, 13:8, 14:19, 15:15, 16:18, 17:21, 23:20, 24:23, 29:22}
+
+# for model online
+#mutant manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:9, 8:7, 9:8, 10:12, 11:13, 12:14, 13:10, 14:11,  15:15, 16:16, 17:17, 20:18, 21:19, 22:20, 23:21, 25:23}
+#ely manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:9, 8:7, 9:8, 10:12, 11:13, 12:14, 13:10, 14:11, 15:15, 16:16, 17:17, 21:18, 22:19, 23:20, 24:21, 26:22, 31:23}
+#sal manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:9, 8:7, 9:8, 10:12, 11:13, 12:14, 13:10, 14:11, 15:15, 16:16, 17:17, 21:18, 22:19, 23:20, 24:21, 25:22, 31:23}
+#mar 
+manual_model_to_smpl ={}#0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:9, 8:7, 9:8, 10:12, 11:14, 12:13, 13:10, 14:11, 15:15, 16:17, 17:16, 21:19, 22:18, 23:21, 24:20, 25:23, 31:22}
+#maw manual_model_to_smpl ={0:0, 1:3, 2:1, 3:2, 4:6, 5:4, 6:5, 7:9, 8:7, 9:8, 10:12, 11:13, 12:14, 13:10, 14:11, 15:15, 16:16, 17:17, 21:18, 22:19, 23:20, 24:21, 26:22, 30:23}
 
 smpl_joint_names = [
-    "hips", 
-    "leftUpLeg", 
-    "rightUpLeg", 
-    "spine", 
-    "leftLeg", 
-    "rightLeg", 
-    "spine1", 
-    "leftFoot", 
-    "rightFoot", 
-    "spine2", 
-    "leftToeBase", 
-    "rightToeBase", 
-    "neck", 
-    "leftShoulder", 
-    "rightShoulder", 
-    "head", 
-    "leftArm", 
-    "rightArm", 
-    "leftForeArm", 
-    "rightForeArm", 
-    "leftHand", 
-    "rightHand", 
-    "leftHandIndex1"
-    "rightHandIndex1", 
+    "hips",  #0
+    "leftUpLeg", #1
+    "rightUpLeg", #2
+    "spine", #3
+    "leftLeg", #4
+    "rightLeg", #5
+    "spine1", #6
+    "leftFoot", #7
+    "rightFoot", #8
+    "spine2", #9
+    "leftToeBase", #10
+    "rightToeBase", #11
+    "neck", #12
+    "leftShoulder", #13 
+    "rightShoulder", #14
+    "head", #15
+    "leftArm", #16
+    "rightArm", #17
+    "leftForeArm", #18
+    "rightForeArm", #19
+    "leftHand", #20
+    "rightHand", #21
+    "leftHandIndex1"#22
+    "rightHandIndex1", #23
+]
+
+class TriangleMesh:
+    def __init__(self, filename): 
+        self.vertices, self.triangles = self.load(filename)
+
+    def load(self, filename):
+        fp = open(filename, "r")
+        lines = fp.read().strip().split('\n')
+        vid = 0 
+        fid = 0
+        vertices = []
+        triangles = []
+        for line in lines: 
+            if not line.startswith("v") and not line.startswith("f"):
+                continue 
+            if line.startswith("v"):
+                vertices.append(line.split(' ')[1:])
+                vid += 1  
+            else:
+                triangles.append(line.split(' ')[1:])
+                fid += 1
+        fp.close()
+        vertices = np.array(vertices).reshape(-1, 3).astype(np.float32)
+        triangles = np.array(triangles).reshape(-1, 3).astype(np.int)
+        return vertices, triangles
+
+new_set = [
+    "hand",
+    "upleg",
+    "leg",
+    "handindex1",
+    "foot",
+    "foreArm",
+    "arm",
+    "shoulder",
+    "toebase", 
 ]
 
 def _lazy_get_model_to_smpl(_index2joint): 
@@ -55,11 +118,51 @@ def _lazy_get_model_to_smpl(_index2joint):
     mappings = {}
     lower_smpl_joint_names = [name.lower() for name in smpl_joint_names]
     for index, joint_name in _index2joint.items(): 
-        if joint_name.lower() not in lower_smpl_joint_names: 
-            continue 
-        smpl_index = lower_smpl_joint_names.index(joint_name.lower())
-        mappings[index] = smpl_index 
+        
+        for one_part in lower_smpl_joint_names:
+            if joint_name.lower().find(one_part) > -1:
+                smpl_index = lower_smpl_joint_names.index(one_part.lower())
+                mappings[index] = smpl_index
+                
+        if joint_name.lower().find('thigh') > -1:
+            if joint_name.lower().find('l') > -1:
+                smpl_index = lower_smpl_joint_names.index("leftUpLeg".lower())
+                mappings[index] = smpl_index
+            if joint_name.lower().find('r') > -1:
+                smpl_index = lower_smpl_joint_names.index('rightUpLeg'.lower())
+                mappings[index] = smpl_index
+
+                
+        for a_part in new_set:
+            if joint_name.lower().find(a_part) > -1:
+                if joint_name.lower()[0] == 'l':
+                    smpl_index = lower_smpl_joint_names.index(('left' + a_part).lower())
+                    print(('left' + a_part).lower())
+                    mappings[index] = smpl_index 
+                if joint_name.lower()[0] == 'r':
+                    smpl_index = lower_smpl_joint_names.index('right' + a_part.lower())
+                    mappings[index] = smpl_index 
+            
+        if joint_name.lower() in lower_smpl_joint_names:
+            smpl_index = lower_smpl_joint_names.index(joint_name.lower())
+            mappings[index] = smpl_index 
+    print(mappings)
     return mappings
+
+
+# def _lazy_get_model_to_smpl(_index2joint): 
+#     """
+#     lazy mapper, which maps SMPL joints to character joints directly by their names
+#     """
+#     mappings = {}
+#     lower_smpl_joint_names = [name.lower() for name in smpl_joint_names]
+#     for index, joint_name in _index2joint.items(): 
+#         if joint_name.lower() not in lower_smpl_joint_names: 
+#             continue 
+#         smpl_index = lower_smpl_joint_names.index(joint_name.lower())
+#         mappings[index] = smpl_index 
+#     print(mappings)
+#     return mappings
 
 def _get_extra_uv_lines(infofile): 
     """
@@ -157,6 +260,7 @@ def transfer_given_pose(human_pose, infoname, is_root_rotated=False):
     inmesh = o3d.io.read_triangle_mesh(meshname)
     v_posed = np.array(inmesh.vertices)
 
+    #######################################################################
     custom_inmesh = TriangleMesh(meshname)
     inmesh.vertices = o3d.utility.Vector3dVector(custom_inmesh.vertices)
     inmesh.triangles = o3d.utility.Vector3iVector(custom_inmesh.triangles)
@@ -327,16 +431,16 @@ def transfer_given_pose(human_pose, infoname, is_root_rotated=False):
     outmesh.vertices = o3d.utility.Vector3dVector(v)
 
     # finally save the results for submission. Note that the logic here only saves connectivity. You still need to run vis.py to record visualization 
-    # if not osp.exists(osp.join("results", infoname.replace(".txt", ".pkl").replace('/', '_'))): 
-    os.makedirs("./results", exist_ok=True)
-    save_dict = {
-        "infoname": infoname, 
-        "hier": new_hier, 
-        "name2index": new_joint2index, 
-        "model2smpl": model_to_smpl
-    }
-    with open(osp.join("results", str(infoname).replace(".txt", ".pkl").replace('/', '_')), "wb") as f: 
-        pkl.dump(save_dict, f)
+    if not osp.exists(osp.join("results", infoname.replace(".txt", ".pkl").replace('/', '_'))): 
+        os.makedirs("./results", exist_ok=True)
+        save_dict = {
+            "infoname": infoname, 
+            "hier": new_hier, 
+            "name2index": new_joint2index, 
+            "model2smpl": model_to_smpl
+        }
+        with open(osp.join("results", str(infoname).replace(".txt", ".pkl").replace('/', '_')), "wb") as f: 
+            pkl.dump(save_dict, f)
 
     return outinfo, outmesh
 
@@ -391,11 +495,13 @@ def transfer_one_sequence(infofile, seqfile, use_online_model=False):
     if use_online_model:
         extra_uv_lines = _get_extra_uv_lines(infofile) 
         # create symlink
-        for _file in os.listdir(os.path.dirname(infofile)): 
+        for _file in os.listdir(r"C:\Users\蒋铭阳\Desktop\JMY\大二下\机器学习\pose2carton-main (1)\pose2carton-main"):#os.path.dirname(infofile)): 
             # for texture or material
             if _file.endswith(".png") or _file.endswith(".mtl"): 
                 src_path = os.path.abspath(os.path.join(os.path.dirname(infofile), _file))
+                print(src_path)
                 dst_path = os.path.join(savedir, _file)
+                print(dst_path)
                 if not osp.exists(dst_path): 
                     os.symlink(src_path, dst_path)
     else: 
@@ -463,10 +569,19 @@ if __name__ == '__main__':
     #     transfer_one_frame(infofile)
 
     # for provided models
-    # transfer_one_frame("fbx/10559.txt")
-    # transfer_one_sequence("fbx/10559.txt", "info_seq_5.pkl")
+    transfer_one_frame("group_15/fbx/5520.txt")
+    # file_name = "group_15/fbx/" + str(tmp_file) + ".txt"
+    # # 
+    # if seq == 0:
+    #     transfer_one_frame(file_name)
+    # if seq ==1:
+    #     transfer_one_sequence(file_name, "info_seq_5.pkl")
 
     # for possible model downloaded online
-    # clean_info("samples/Ch14_nonPBR.txt")
-    transfer_one_frame("samples/Ch14_nonPBR.txt", use_online_model=True)
-    # transfer_one_sequence("samples/Ch14_nonPBR.txt", "info_seq_5.pkl", use_online_model=True)
+    # file_name_tmp = "mutant" #"dreyar_m_aure.txt"
+    # file_name = file_name_tmp + "/" + file_name_tmp + ".txt"
+    # file_name = "mar.txt"
+    # clean_info(file_name)
+    # transfer_one_frame(file_name, use_online_model=True)
+    #transfer_one_sequence(file_name, "info_seq_5.pkl", use_online_model=True)
+
